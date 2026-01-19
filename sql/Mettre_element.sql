@@ -56,4 +56,9 @@ INSERT INTO `type` (`id_type`, `nom_type`) VALUES
 (3, 'Plante'),
 (4, 'Electrik');
 
+
+
+INSERT INTO `potion` (`id_potion`, `nom`,`soin`) VALUES
+(1, 'potion',10)
+
 */
