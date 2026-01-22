@@ -1,4 +1,6 @@
 import pygame
+import sqlite3
+import random
 import sys
 
 # Initialisation de Pygame
@@ -25,6 +27,25 @@ class Game:
         # Bouton
         self.button_rect = pygame.Rect(300, 430, 600, 110)
 
+        #pokemon
+        self.pokemon={}
+
+    def charger_pokemon(self):
+        conn = sqlite3.connect("./sql/pokemon.db")
+        cur = conn.cursor()
+
+        cur.execute("""
+            SELECT nom, pv_max, attaque, defense, vitesse, image, id_type
+            FROM pokemon
+        """)
+
+        for row in cur.fetchall():
+            nom = row[0]
+            self.pokemon[nom] = list(row[1:])
+
+        conn.close()
+
+    
     def event(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -59,9 +80,18 @@ class Game:
     
     
     def draw_preparation(self):
-        self.screen.fill((0, 150, 0))
-        text = self.button_font.render("Écran de combat (à venir)", True, (255, 255, 255))
-        self.screen.blit(text, (400, 380))
+        # fond bleu à gauche
+        pygame.draw.rect(self.screen, (0, 0, 255), (0, 0, 1200 // 2, 800))
+
+        # fond rouge à droite
+        pygame.draw.rect(self.screen, (255, 0, 0), (1200 // 2, 0, 1200 // 2, 800))
+
+
+        player1 = self.button_font.render("Player1", True, (255, 255, 255))
+        self.screen.blit(player1, (150, 80))
+        player2 = self.button_font.render("Player2", True, (255, 255, 255))
+        self.screen.blit(player2, (880, 80))
+
 
     
     
@@ -77,6 +107,7 @@ class Game:
         pygame.display.flip()
 
     def Run(self):
+        self.charger_pokemon()
         while self.run:
             self.event()
             self.update()
