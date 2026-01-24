@@ -2,6 +2,7 @@ import pygame
 import sqlite3
 import random
 import sys
+from Pokemon import Pokemon
 
 # Initialisation de Pygame
 pygame.init()
@@ -30,6 +31,14 @@ class Game:
         #pokemon
         self.pokemon={}
 
+        #liste pokemon joeur
+
+        self.player1=[]
+        self.player2=[]
+
+        self.liste_choix1={}
+        self.liste_choix2={}
+
     def charger_pokemon(self):
         conn = sqlite3.connect("./sql/pokemon.db")
         cur = conn.cursor()
@@ -44,6 +53,57 @@ class Game:
             self.pokemon[nom] = list(row[1:])
 
         conn.close()
+
+
+        #choix des pokemon
+        
+
+        for i in range(6):
+
+            cle_au_hasard = random.choice(list(self.pokemon.keys()))
+            self.liste_choix1[cle_au_hasard]=self.pokemon[cle_au_hasard]
+
+        
+        for i in range(6):
+            cle_au_hasard = random.choice(list(self.pokemon.keys()))
+            self.liste_choix2[cle_au_hasard]=self.pokemon[cle_au_hasard]
+
+        
+        for nom in self.liste_choix1:
+            stats = self.liste_choix1[nom]
+            self.player1.append(
+                Pokemon(
+                    nom,
+                    stats[0],  # pv
+                    stats[1],  # attaque
+                    stats[2],  # defense
+                    stats[3],  # vitesse
+                    stats[4],  # image
+                    stats[5]   # type
+                )
+            )
+
+        
+        for nom in self.liste_choix2:
+            stats = self.liste_choix2[nom]
+            self.player2.append(
+                Pokemon(
+                    nom,
+                    stats[0],
+                    stats[1],
+                    stats[2],
+                    stats[3],
+                    stats[4],
+                    stats[5]
+                )
+            )
+
+        
+        
+        
+
+
+    
 
     
     def event(self):
@@ -89,8 +149,28 @@ class Game:
 
         player1 = self.button_font.render("Player1", True, (255, 255, 255))
         self.screen.blit(player1, (150, 80))
+
+        
+        
+        if self.player1:
+            self.screen.blit(pygame.image.load(self.liste_choix1[list(self.liste_choix1.keys())[1]][4]).convert_alpha(), (100, 200))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         player2 = self.button_font.render("Player2", True, (255, 255, 255))
         self.screen.blit(player2, (880, 80))
+
 
 
     
