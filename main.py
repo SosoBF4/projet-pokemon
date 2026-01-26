@@ -28,6 +28,8 @@ class Game:
         # Bouton
         self.button_rect = pygame.Rect(300, 430, 600, 110)
 
+        self.button_rect2= pygame.Rect(450, 350, 250, 70)
+
         #pokemon
         self.pokemon={}
 
@@ -56,17 +58,21 @@ class Game:
 
 
         #choix des pokemon
+
+
+
+        cles = random.sample(list(self.pokemon.keys()), 6)
+
+        for cle in cles:
+            self.liste_choix1[cle] = self.pokemon[cle]
+        
+        cles = random.sample(list(self.pokemon.keys()), 6)
+        
+        for cle in cles:
+            self.liste_choix2[cle] = self.pokemon[cle]
+        
         
 
-        for i in range(6):
-
-            cle_au_hasard = random.choice(list(self.pokemon.keys()))
-            self.liste_choix1[cle_au_hasard]=self.pokemon[cle_au_hasard]
-
-        
-        for i in range(6):
-            cle_au_hasard = random.choice(list(self.pokemon.keys()))
-            self.liste_choix2[cle_au_hasard]=self.pokemon[cle_au_hasard]
 
         
         for nom in self.liste_choix1:
@@ -116,13 +122,27 @@ class Game:
                     if self.button_rect.collidepoint(event.pos):
                         self.state = "preparation"
 
+            if self.state == "preparation":
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.button_rect2.collidepoint(event.pos):
+                        self.state = "combat"
+
     def update(self):
         pass
 
     
     
     def draw_menu(self):
-        self.screen.fill((155, 0, 0))
+        
+        background = pygame.image.load("./image/menu.png").convert()
+        # Agrandir à la taille de la fenêtre (1200x800)
+        background = pygame.transform.scale(background, (1200, 900))
+        # Afficher le fond
+        self.screen.blit(background, (0, 0))
+
+        
+
+
 
         # Titre
         title_surface = self.title_font.render("POKÉMON", True, (255, 204, 0))
@@ -147,31 +167,42 @@ class Game:
         pygame.draw.rect(self.screen, (255, 0, 0), (1200 // 2, 0, 1200 // 2, 800))
 
 
-        player1 = self.button_font.render("Player1", True, (255, 255, 255))
-        self.screen.blit(player1, (150, 80))
+        player1 = self.button_font.render("Player1", True, (255, 223, 100))
+        self.screen.blit(player1, (170, 80))
 
-        
         
         if self.player1:
-            self.screen.blit(pygame.image.load(self.liste_choix1[list(self.liste_choix1.keys())[1]][4]).convert_alpha(), (100, 200))
+            for i, pos in enumerate([(100,200), (300,200), (100,400), (300,400), (200,600)], start=1):
+                img = pygame.image.load(self.liste_choix1[list(self.liste_choix1.keys())[i]][4]).convert_alpha()
+                img = pygame.transform.scale(img, (150, 150))
+                self.screen.blit(img, pos)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-        player2 = self.button_font.render("Player2", True, (255, 255, 255))
+        player2 = self.button_font.render("Player2", True, (255, 223, 100))
         self.screen.blit(player2, (880, 80))
 
 
+
+
+        if self.player2:
+            for i, pos in enumerate([(700,200), (900,200), (700,400), (900,400), (800,600)], start=1):
+                img = pygame.image.load(self.liste_choix2[list(self.liste_choix2.keys())[i]][4]).convert_alpha()
+                img = pygame.transform.scale(img, (150, 150))
+                self.screen.blit(img, pos)
+
+        
+        
+        
+        pygame.draw.rect(self.screen, (100, 0, 0), self.button_rect2, border_radius=15)
+        pygame.draw.rect(self.screen, (0, 0, 0), self.button_rect2, 4, border_radius=15)
+        text_surface = self.button_font.render("Combattre", True, (255, 255, 255))
+        text_rect = text_surface.get_rect(center=self.button_rect2.center)
+        self.screen.blit(text_surface, text_rect)
+
+
+
+    def draw_combat(self):
+        self.screen.fill((155, 0, 0))
 
     
     
@@ -182,6 +213,9 @@ class Game:
             self.draw_menu()
         elif self.state == "preparation":
             self.draw_preparation()
+
+        elif self.state == "combat":
+            self.draw_combat()
 
 
         pygame.display.flip()
