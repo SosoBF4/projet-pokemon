@@ -60,20 +60,13 @@ class Game:
         #choix des pokemon
 
 
-
-        cles = random.sample(list(self.pokemon.keys()), 6)
-
+        cles = random.sample(list(self.pokemon.keys()), 5)
         for cle in cles:
             self.liste_choix1[cle] = self.pokemon[cle]
         
-        cles = random.sample(list(self.pokemon.keys()), 6)
-        
+        cles = random.sample(list(self.pokemon.keys()), 5)
         for cle in cles:
             self.liste_choix2[cle] = self.pokemon[cle]
-        
-        
-
-
         
         for nom in self.liste_choix1:
             stats = self.liste_choix1[nom]
@@ -88,7 +81,6 @@ class Game:
                     stats[5]   # type
                 )
             )
-
         
         for nom in self.liste_choix2:
             stats = self.liste_choix2[nom]
@@ -104,9 +96,7 @@ class Game:
                 )
             )
 
-        
-        
-        
+
 
 
     
@@ -172,10 +162,18 @@ class Game:
 
         
         if self.player1:
-            for i, pos in enumerate([(100,200), (300,200), (100,400), (300,400), (200,600)], start=1):
-                img = pygame.image.load(self.liste_choix1[list(self.liste_choix1.keys())[i]][4]).convert_alpha()
-                img = pygame.transform.scale(img, (150, 150))
+
+            positions1 = [(100,200), (300,200), (100,400), (300,400), (200,600)]  # 5 positions
+            for i, nom in enumerate(self.liste_choix1):
+                pos = positions1[i]
+                img_path = self.liste_choix1[nom][4]
+                img = pygame.image.load(img_path).convert_alpha()
+                img = pygame.transform.scale(img, (150,150))
                 self.screen.blit(img, pos)
+            
+            
+            
+            
 
 
         player2 = self.button_font.render("Player2", True, (255, 223, 100))
@@ -185,9 +183,12 @@ class Game:
 
 
         if self.player2:
-            for i, pos in enumerate([(700,200), (900,200), (700,400), (900,400), (800,600)], start=1):
-                img = pygame.image.load(self.liste_choix2[list(self.liste_choix2.keys())[i]][4]).convert_alpha()
-                img = pygame.transform.scale(img, (150, 150))
+            positions2 = [(700,200), (900,200), (700,400), (900,400), (800,600)]  # 5 positions
+            for i, nom in enumerate(self.liste_choix2):
+                pos = positions2[i]
+                img_path = self.liste_choix2[nom][4]
+                img = pygame.image.load(img_path).convert_alpha()
+                img = pygame.transform.scale(img, (150,150))
                 self.screen.blit(img, pos)
 
         
@@ -202,7 +203,33 @@ class Game:
 
 
     def draw_combat(self):
-        self.screen.fill((155, 0, 0))
+        background = pygame.image.load("./image/fond_combat.png").convert()
+        # Agrandir à la taille de la fenêtre (1200x800)
+        background = pygame.transform.scale(background, (1200, 900))
+        # Afficher le fond
+        self.screen.blit(background, (0, 0))
+
+
+        player1_barre=pygame.draw.rect(self.screen, (255, 255, 255), (140, 240, 350, 120),border_radius=25 )
+        player2_barre=pygame.draw.rect(self.screen, (255, 255, 255), (800, 610, 350, 120),border_radius=25 )
+
+
+        Pokemon1_titre = pygame.font.SysFont("arial", 28, True).render(self.player1[0].nom, True, (0, 0, 0))
+        self.screen.blit(
+            Pokemon1_titre,
+            Pokemon1_titre.get_rect(topleft=player1_barre.topleft)
+        )
+
+        Pokemon2_titre = pygame.font.SysFont("arial", 28, True).render(self.player2[0].nom, True, (0, 0, 0))
+        self.screen.blit(
+            Pokemon2_titre,
+            Pokemon2_titre.get_rect(topleft=player2_barre.topleft)
+        )
+        
+
+        
+        
+    
 
     
     
@@ -222,6 +249,8 @@ class Game:
 
     def Run(self):
         self.charger_pokemon()
+        print(self.liste_choix1)
+        print(self.liste_choix2)
         while self.run:
             self.event()
             self.update()
