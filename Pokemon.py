@@ -2,8 +2,7 @@ import pygame
 
 class Pokemon:
     def __init__(self, nom: str, pv_max: int,
-                 attaque: int, defense: int, vitesse: int,
-                 type_pokemon: int, image_path: str):
+                 attaque: int, defense: int, vitesse: int, image_path: str,type_pokemon: int):
 
         self.nom = nom
         self.pv_max = pv_max

@@ -3,6 +3,7 @@ import sqlite3
 import random
 import sys
 from Pokemon import Pokemon
+from Potion import Potion
 
 # Initialisation de Pygame
 pygame.init()
@@ -38,8 +39,14 @@ class Game:
         self.player1=[]
         self.player2=[]
 
+        self.potion1=[]
+        self.potion2=[]
+
         self.liste_choix1={}
         self.liste_choix2={}
+
+        self.pokemon_actuel1=[]
+        self.pokemon_actuel2=[]
 
     def charger_pokemon(self):
         conn = sqlite3.connect("./sql/pokemon.db")
@@ -96,6 +103,38 @@ class Game:
                 )
             )
 
+        self.pokemon_actuel1.append(self.player1[0])
+        self.pokemon_actuel2.append(self.player2[0])
+
+        
+
+        conn = sqlite3.connect("./sql/pokemon.db")
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT nom, soin
+            FROM potion
+        """)
+        
+        row = cur.fetchone()  # ✅ première ligne uniquement
+
+        nom = row[0]     # ✅ variable nom
+        soin = row[1]    # ✅ variable soin 
+    
+        conn.close()
+
+        for i in range(2):
+
+            self.potion1.append(Potion(nom,soin))
+
+        for i in range(2):
+            self.potion2.append(Potion(nom,soin))
+
+
+        
+
+
+        
 
 
 
@@ -213,19 +252,52 @@ class Game:
         player1_barre=pygame.draw.rect(self.screen, (255, 255, 255), (140, 240, 350, 120),border_radius=25 )
         player2_barre=pygame.draw.rect(self.screen, (255, 255, 255), (800, 610, 350, 120),border_radius=25 )
 
+        pourcentage1=self.pokemon_actuel1[0].pv_actuels/self.pokemon_actuel1[0].pv_max
+        largeur_barre1 = int(310 * pourcentage1)
+        pygame.draw.rect(
+        self.screen,
+        (0, 200, 0),                 # vert
+        (160, 290, largeur_barre1, 15),
+        border_radius=8
+        )     
 
-        Pokemon1_titre = pygame.font.SysFont("arial", 28, True).render(self.player1[0].nom, True, (0, 0, 0))
+
+        Pokemon1_titre = pygame.font.SysFont("arial", 28, True).render(self.pokemon_actuel1[0].nom, True, (0, 0, 0))
         self.screen.blit(
             Pokemon1_titre,
             Pokemon1_titre.get_rect(topleft=player1_barre.topleft)
         )
 
-        Pokemon2_titre = pygame.font.SysFont("arial", 28, True).render(self.player2[0].nom, True, (0, 0, 0))
+   
+
+        Pokemon2_titre = pygame.font.SysFont("arial", 28, True).render(self.pokemon_actuel2[0].nom, True, (0, 0, 0))
         self.screen.blit(
             Pokemon2_titre,
             Pokemon2_titre.get_rect(topleft=player2_barre.topleft)
         )
+
+
+        pourcentage2=self.pokemon_actuel2[0].pv_actuels/self.pokemon_actuel2[0].pv_max
+        largeur_barre2 = int(310 * pourcentage2)
+        pygame.draw.rect(
+        self.screen,
+        (0, 200, 0),                 # vert
+        (820, 660, largeur_barre2, 15),
+        border_radius=8
+
+        )
+
+
+        pokemon1 = pygame.image.load(str(self.pokemon_actuel1[0].image_path)).convert_alpha()
+        pokemon1 = pygame.transform.scale(pokemon1, (300, 300))  # ← taille ici
+        self.screen.blit(pokemon1, (140, 440))
+
+
+        pokemon2 = pygame.image.load(str(self.pokemon_actuel2[0].image_path)).convert_alpha()
+        pokemon2 = pygame.transform.scale(pokemon2, (300, 350))  # ← taille ici
+        self.screen.blit(pokemon2, (800, 240))
         
+
 
         
         
@@ -249,8 +321,6 @@ class Game:
 
     def Run(self):
         self.charger_pokemon()
-        print(self.liste_choix1)
-        print(self.liste_choix2)
         while self.run:
             self.event()
             self.update()
