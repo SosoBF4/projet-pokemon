@@ -6,3 +6,10 @@ class Potion:
 
         self.nom = nom
         self.soin = soin
+
+    def soigner(self,pokemon):
+
+        pokemon.pv_actuels+=self.soin
+
+        if pokemon.pv_actuels > pokemon.pv_max:
+            pokemon.pv_actuels = pokemon.pv_max

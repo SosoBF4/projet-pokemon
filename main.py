@@ -31,6 +31,10 @@ class Game:
 
         self.button_rect2= pygame.Rect(450, 350, 250, 70)
 
+        self.button_attaque = pygame.Rect(380, 100, 200, 60)
+
+        self.button_potion= pygame.Rect(650, 100, 200, 60)
+
         #pokemon
         self.pokemon={}
 
@@ -47,6 +51,11 @@ class Game:
 
         self.pokemon_actuel1=[]
         self.pokemon_actuel2=[]
+
+        self.choix=[]
+
+
+        self.tour_player1 = 1
 
     def charger_pokemon(self):
         conn = sqlite3.connect("./sql/pokemon.db")
@@ -156,11 +165,77 @@ class Game:
                     if self.button_rect2.collidepoint(event.pos):
                         self.state = "combat"
 
-    def update(self):
-        pass
+            if self.state == "combat" and event.type == pygame.MOUSEBUTTONDOWN:
 
+                # PLAYER 1
+                if self.tour_player1 == 1:
+                    if self.button_attaque.collidepoint(event.pos):
+                        self.choix.append( "attaque")
+                        self.tour_player1 = 2
+            
+                    elif self.button_potion.collidepoint(event.pos):
+                        self.choix.append( "potion")
+                        self.tour_player1 = 2
+            
+                # PLAYER 2
+                elif self.tour_player1 == 2:
+                    if self.button_attaque.collidepoint(event.pos):
+                        self.choix.append("attaque")
+                        self.tour_player1 = 3
+            
+                    elif self.button_potion.collidepoint(event.pos):
+                        self.choix.append(("potion"))
+                        self.tour_player1 = 3
+   
+            
+            
+            
+            
+        
+            
+            
+            
+            
+    def update(self):
+
+        if len(self.choix) == 2:
+            p1 = self.pokemon_actuel1[0]
+            p2 = self.pokemon_actuel2[0]
+        
+            # ----- ACTION PLAYER 1 -----
+            if self.choix[0] == "attaque":
+                if p1.pv_actuels > 0:
+                    p1.attaquer(p2)
+        
+            elif self.choix[0] == "potion":
+                if self.potion1 and p1.pv_actuels > 0:
+                    self.potion1[0].soigner(p1)
+                    self.potion1.pop(0)
+        
+            # ----- ACTION PLAYER 2 -----
+            if self.choix[1] == "attaque":
+                if p2.pv_actuels > 0:
+                    p2.attaquer(p1)
+        
+            elif self.choix[1] == "potion":
+                if self.potion2 and p2.pv_actuels > 0:
+                    self.potion2[0].soigner(p2)
+                    self.potion2.pop(0)
+        
+            # ----- FIN DU TOUR -----
+            self.choix.clear()
+            self.tour_player1 = 1
+
+        
+                
+
+        
+        
     
-    
+        
+        
+        
+        
     def draw_menu(self):
         
         background = pygame.image.load("./image/menu.png").convert()
@@ -296,6 +371,47 @@ class Game:
         pokemon2 = pygame.image.load(str(self.pokemon_actuel2[0].image_path)).convert_alpha()
         pokemon2 = pygame.transform.scale(pokemon2, (300, 350))  # ← taille ici
         self.screen.blit(pokemon2, (800, 240))
+
+        #Commande 
+
+        if self.tour_player1==1:
+
+            player1 = self.button_font.render("Player1", True, (0, 0, 255))
+            self.screen.blit(player1, (570, 10))
+    
+            pygame.draw.rect(self.screen, (180, 30, 30), self.button_attaque, border_radius=15)
+            pygame.draw.rect(self.screen, (180, 30, 30), self.button_attaque, 4, border_radius=15)
+            text_surface = self.button_font.render("Attaquer", True, (255, 255, 255))
+            text_attaque = text_surface.get_rect(center=self.button_attaque.center)
+            self.screen.blit(text_surface, text_attaque)
+    
+            if pourcentage1<0.8 and len(self.potion1)!=0:
+                pygame.draw.rect(self.screen, (40, 170, 90), self.button_potion, border_radius=15)
+                pygame.draw.rect(self.screen, (40, 170, 90), self.button_potion, 4, border_radius=15)
+                text_surface = self.button_font.render("Soigner", True, (255, 255, 255))
+                text_potion = text_surface.get_rect(center=self.button_potion.center)
+                self.screen.blit(text_surface, text_potion)
+
+        if self.tour_player1 ==2:
+
+            player2 = self.button_font.render("Player2", True, (255, 0, 0))
+            self.screen.blit(player2, (570, 10))
+
+
+            pygame.draw.rect(self.screen, (180, 30, 30), self.button_attaque, border_radius=15)
+            pygame.draw.rect(self.screen, (180, 30, 30), self.button_attaque, 4, border_radius=15)
+            text_surface = self.button_font.render("Attaquer", True, (255, 255, 255))
+            text_attaque = text_surface.get_rect(center=self.button_attaque.center)
+            self.screen.blit(text_surface, text_attaque)
+
+            if pourcentage2<0.8 and len(self.potion2)!=0:
+                pygame.draw.rect(self.screen, (40, 170, 90), self.button_potion, border_radius=15)
+                pygame.draw.rect(self.screen, (40, 170, 90), self.button_potion, 4, border_radius=15)
+                text_surface = self.button_font.render("Soigner", True, (255, 255, 255))
+                text_potion = text_surface.get_rect(center=self.button_potion.center)
+                self.screen.blit(text_surface, text_potion)
+        
+
         
 
 
