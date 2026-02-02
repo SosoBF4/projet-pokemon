@@ -31,9 +31,36 @@ class Game:
 
         self.button_rect2= pygame.Rect(450, 350, 250, 70)
 
-        self.button_attaque = pygame.Rect(380, 100, 200, 60)
+        self.button_attaque = pygame.Rect(50, 100, 200, 60)
 
-        self.button_potion= pygame.Rect(650, 100, 200, 60)
+        self.button_attaque2 = pygame.Rect(600, 100, 200, 60)
+
+        self.button_potion= pygame.Rect(320, 100, 200, 60)
+        
+        
+        self.button_potion2= pygame.Rect(870, 100, 200, 60)
+
+
+
+        pygame.mixer.init()     #Music
+        pygame.mixer.music.set_volume(0.4)
+
+        self.musique_actuelle = None
+        
+        
+        
+        self.musiques = {                     
+                    "menu": "./music/Introduction.mp3",
+                    "preparation": "./music/Introduction.mp3",
+                    "combat": "./music/Combat.mp3"
+                }
+        
+        self.son_retirer = pygame.mixer.Sound("./music/mort.mp3")
+        self.son_envoyer = pygame.mixer.Sound("./music/nouveau.mp3")
+        
+        self.son_retirer.set_volume(0.6)
+        self.son_envoyer.set_volume(0.6)
+
 
         #pokemon
         self.pokemon={}
@@ -56,6 +83,27 @@ class Game:
 
 
         self.tour_player1 = 1
+
+        self.gagnant=""
+
+
+    def changer_musique(self, state):
+        # menu et preparation = même musique
+
+        if state == "victoire":
+           return
+        
+        if state in ("menu", "preparation"):
+            musique_voulue = "menu"
+        else:
+            musique_voulue = state
+    
+        if self.musique_actuelle != musique_voulue:
+            pygame.mixer.music.stop()
+            pygame.mixer.music.load(self.musiques[musique_voulue])
+            pygame.mixer.music.play(-1)
+            self.musique_actuelle = musique_voulue
+    
 
     def charger_pokemon(self):
         conn = sqlite3.connect("./sql/pokemon.db")
@@ -113,7 +161,9 @@ class Game:
             )
 
         self.pokemon_actuel1.append(self.player1[0])
+        self.player1.pop(0)
         self.pokemon_actuel2.append(self.player2[0])
+        self.player2.pop(0)
 
         
 
@@ -165,6 +215,11 @@ class Game:
                     if self.button_rect2.collidepoint(event.pos):
                         self.state = "combat"
 
+            if self.gagnant!="":
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.button_rect2.collidepoint(event.pos):
+                        self.state = "victoire"
+
             if self.state == "combat" and event.type == pygame.MOUSEBUTTONDOWN:
 
                 # PLAYER 1
@@ -179,11 +234,11 @@ class Game:
             
                 # PLAYER 2
                 elif self.tour_player1 == 2:
-                    if self.button_attaque.collidepoint(event.pos):
+                    if self.button_attaque2.collidepoint(event.pos):
                         self.choix.append("attaque")
                         self.tour_player1 = 3
             
-                    elif self.button_potion.collidepoint(event.pos):
+                    elif self.button_potion2.collidepoint(event.pos):
                         self.choix.append(("potion"))
                         self.tour_player1 = 3
    
@@ -225,6 +280,68 @@ class Game:
             # ----- FIN DU TOUR -----
             self.choix.clear()
             self.tour_player1 = 1
+
+
+        # PLAYER 1 KO
+        if self.pokemon_actuel1[0].pv_actuels <= 0:
+            if self.player1:  # il reste des Pokémon
+                self.son_retirer.play()
+                pygame.time.delay(3000)
+                self.son_envoyer.play()
+                pygame.time.delay(1000)
+                self.pokemon_actuel1[0] = self.player1.pop(0)
+            else:  # plus de Pokémon → Player2 gagne
+                self.gagnant = "Player2"
+                self.state = "victoire"
+
+        # PLAYER 2 KO
+        if self.pokemon_actuel2[0].pv_actuels <= 0:
+            if self.player2:  # il reste des Pokémon
+                self.son_retirer.play()
+                pygame.time.delay(3000)
+                self.son_envoyer.play()
+                pygame.time.delay(1000)
+                self.pokemon_actuel2[0] = self.player2.pop(0)
+            else:  # plus de Pokémon → Player1 gagne
+                self.gagnant = "Player1"
+                self.state = "victoire"
+
+
+        
+        
+        
+        
+
+        
+
+        
+        
+
+        
+        
+        
+        
+
+        
+
+        
+        
+        self.changer_musique(self.state)
+
+
+        if len(self.player1)==0: # Player 1 a perdu
+            self.gagnant="Player2"
+        
+        
+        
+        if len(self.player2)==0: # Player 1 a perdu
+            self.gagnant="Player2"
+        
+        
+
+
+
+            
 
         
                 
@@ -377,7 +494,7 @@ class Game:
         if self.tour_player1==1:
 
             player1 = self.button_font.render("Player1", True, (0, 0, 255))
-            self.screen.blit(player1, (570, 10))
+            self.screen.blit(player1, (250, 10))
     
             pygame.draw.rect(self.screen, (180, 30, 30), self.button_attaque, border_radius=15)
             pygame.draw.rect(self.screen, (180, 30, 30), self.button_attaque, 4, border_radius=15)
@@ -395,21 +512,30 @@ class Game:
         if self.tour_player1 ==2:
 
             player2 = self.button_font.render("Player2", True, (255, 0, 0))
-            self.screen.blit(player2, (570, 10))
+            self.screen.blit(player2, (770, 10))
 
 
-            pygame.draw.rect(self.screen, (180, 30, 30), self.button_attaque, border_radius=15)
-            pygame.draw.rect(self.screen, (180, 30, 30), self.button_attaque, 4, border_radius=15)
+            pygame.draw.rect(self.screen, (180, 30, 30), self.button_attaque2, border_radius=15)
+            pygame.draw.rect(self.screen, (180, 30, 30), self.button_attaque2, 4, border_radius=15)
             text_surface = self.button_font.render("Attaquer", True, (255, 255, 255))
-            text_attaque = text_surface.get_rect(center=self.button_attaque.center)
+            text_attaque = text_surface.get_rect(center=self.button_attaque2.center)
             self.screen.blit(text_surface, text_attaque)
 
             if pourcentage2<0.8 and len(self.potion2)!=0:
-                pygame.draw.rect(self.screen, (40, 170, 90), self.button_potion, border_radius=15)
-                pygame.draw.rect(self.screen, (40, 170, 90), self.button_potion, 4, border_radius=15)
+                pygame.draw.rect(self.screen, (40, 170, 90), self.button_potion2, border_radius=15)
+                pygame.draw.rect(self.screen, (40, 170, 90), self.button_potion2, 4, border_radius=15)
                 text_surface = self.button_font.render("Soigner", True, (255, 255, 255))
-                text_potion = text_surface.get_rect(center=self.button_potion.center)
+                text_potion = text_surface.get_rect(center=self.button_potion2.center)
                 self.screen.blit(text_surface, text_potion)
+
+    
+    def draw_victoire(self):
+
+        self.screen.fill((0, 0, 0))
+
+
+
+
         
 
         
@@ -431,6 +557,10 @@ class Game:
 
         elif self.state == "combat":
             self.draw_combat()
+
+        elif self.state == "victoire":
+
+            self.draw_victoire()
 
 
         pygame.display.flip()

@@ -57,7 +57,7 @@ class Pokemon:
             base = max(1, base)
             
 
-            degats = int(self.attaque * multiplicateur)
+            degats = int((self.attaque * multiplicateur) / 3)
     
             # on enlève les PV
             pokemon_adverse.pv_actuels -= degats
