@@ -31,6 +31,8 @@ class Game:
 
         self.button_rect2= pygame.Rect(450, 350, 250, 70)
 
+        self.button_rect3 = pygame.Rect(400, 100, 400, 110)
+
         self.button_attaque = pygame.Rect(50, 100, 200, 60)
 
         self.button_attaque2 = pygame.Rect(600, 100, 200, 60)
@@ -52,7 +54,8 @@ class Game:
         self.musiques = {                     
                     "menu": "./music/Introduction.mp3",
                     "preparation": "./music/Introduction.mp3",
-                    "combat": "./music/Combat.mp3"
+                    "combat": "./music/Combat.mp3",
+                    "victoire":"./music/Victoire.mp3"
                 }
         
         self.son_retirer = pygame.mixer.Sound("./music/mort.mp3")
@@ -85,13 +88,36 @@ class Game:
         self.tour_player1 = 1
 
         self.gagnant=""
+        self.perdent=""
 
 
+    def reset_game(self):
+        # états
+        self.state = "menu"
+        self.tour_player1 = 1
+        self.gagnant = ""
+        self.perdent = ""
+    
+        # listes
+        self.pokemon.clear()
+        self.player1.clear()
+        self.player2.clear()
+        self.potion1.clear()
+        self.potion2.clear()
+        self.liste_choix1.clear()
+        self.liste_choix2.clear()
+        self.pokemon_actuel1.clear()
+        self.pokemon_actuel2.clear()
+        self.choix.clear()
+    
+        # recharger tout
+        self.charger_pokemon()
+    
+    
+    
     def changer_musique(self, state):
         # menu et preparation = même musique
 
-        if state == "victoire":
-           return
         
         if state in ("menu", "preparation"):
             musique_voulue = "menu"
@@ -241,6 +267,13 @@ class Game:
                     elif self.button_potion2.collidepoint(event.pos):
                         self.choix.append(("potion"))
                         self.tour_player1 = 3
+
+
+
+            if self.state == "victoire":
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if self.button_rect3.collidepoint(event.pos):
+                            self.reset_game()
    
             
             
@@ -292,6 +325,7 @@ class Game:
                 self.pokemon_actuel1[0] = self.player1.pop(0)
             else:  # plus de Pokémon → Player2 gagne
                 self.gagnant = "Player2"
+                self.perdent= "Player1"
                 self.state = "victoire"
 
         # PLAYER 2 KO
@@ -304,6 +338,7 @@ class Game:
                 self.pokemon_actuel2[0] = self.player2.pop(0)
             else:  # plus de Pokémon → Player1 gagne
                 self.gagnant = "Player1"
+                self.perdent= "Player2"
                 self.state = "victoire"
 
 
@@ -329,13 +364,6 @@ class Game:
         self.changer_musique(self.state)
 
 
-        if len(self.player1)==0: # Player 1 a perdu
-            self.gagnant="Player2"
-        
-        
-        
-        if len(self.player2)==0: # Player 1 a perdu
-            self.gagnant="Player2"
         
         
 
@@ -531,7 +559,36 @@ class Game:
     
     def draw_victoire(self):
 
-        self.screen.fill((0, 0, 0))
+        background = pygame.image.load("./image/victoire.png").convert()
+        # Agrandir à la taille de la fenêtre (1200x800)
+        background = pygame.transform.scale(background, (1200, 800))
+        # Afficher le fond
+        self.screen.blit(background, (0, 0))
+
+        self.date_font = pygame.font.Font(None, 80)
+
+        victoire = self.date_font.render(self.gagnant, True, (255, 223, 100))
+        self.screen.blit(victoire, (820, 650))
+        
+        perdu = self.date_font.render(self.perdent, True, (255, 223, 100))
+        self.screen.blit(perdu, (200, 650))
+
+        pygame.draw.rect(self.screen, (220, 0, 0), self.button_rect3, border_radius=15)
+        pygame.draw.rect(self.screen, (0, 0, 0), self.button_rect3, 4, border_radius=15)
+        text_surface = self.button_font.render("Aller au menu", True, (255, 255, 255))
+        text_rect = text_surface.get_rect(center=self.button_rect3.center)
+        self.screen.blit(text_surface, text_rect)
+
+        
+
+        
+        
+
+        
+        
+
+    
+        
 
 
 
