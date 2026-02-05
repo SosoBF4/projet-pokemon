@@ -26,6 +26,7 @@ class Game:
         self.title_font = pygame.font.SysFont("arial", 120, bold=True)
         self.button_font = pygame.font.SysFont("arial", 40)
 
+
         # Bouton
         self.button_rect = pygame.Rect(300, 430, 600, 110)
 
