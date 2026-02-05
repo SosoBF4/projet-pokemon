@@ -469,6 +469,18 @@ class Game:
     
     def draw_preparation(self):
         # fond bleu à gauche
+
+        mouse_pos = pygame.mouse.get_pos()
+        pygame.draw.rect(self.screen, (0, 0, 255), (0, 0, 1200//2, 800))
+        pygame.draw.rect(self.screen, (255, 0, 0), (1200//2, 0, 1200//2, 800))
+        self.pokemon_name_font = pygame.font.SysFont("arial", 18, True)
+        self.stats_font = pygame.font.SysFont("arial", 16)
+
+
+        
+
+
+
         pygame.draw.rect(self.screen, (0, 0, 255), (0, 0, 1200 // 2, 800))
 
         # fond rouge à droite
@@ -498,6 +510,31 @@ class Game:
                 nom_txt = self.pokemon_name_font.render(nom, True, (255, 223, 100))
                 nom_rect = nom_txt.get_rect(center=(x + 75, y + 165))
                 self.screen.blit(nom_txt, nom_rect)
+
+                # Créer un rect pour détecter survol
+                rect_img = pygame.Rect(x, y, 150, 150)
+                
+                if rect_img.collidepoint(mouse_pos):
+                    # Mini-écran stats
+                    stats = self.liste_choix1[nom]  # [pv, attaque, défense, vitesse, image]
+                    pv, attaque, defense, vitesse = stats[0], stats[1], stats[2], stats[3]
+                    
+                    # Dessiner un rectangle mini-écran
+                    mini_x, mini_y = x + 160, y
+                    pygame.draw.rect(self.screen, (30,30,30), (mini_x, mini_y, 200, 120))
+                    pygame.draw.rect(self.screen, (255,255,255), (mini_x, mini_y, 200, 120), 2)  # bordure
+                    
+                    # Afficher stats
+                    pv_txt = self.stats_font.render(f"PV : {pv}", True, (255,255,255))
+                    atk_txt = self.stats_font.render(f"ATK : {attaque}", True, (255,255,255))
+                    def_txt = self.stats_font.render(f"DEF : {defense}", True, (255,255,255))
+                    vit_txt = self.stats_font.render(f"VIT : {vitesse}", True, (255,255,255))
+                    
+                    self.screen.blit(pv_txt, (mini_x + 10, mini_y + 10))
+                    self.screen.blit(atk_txt, (mini_x + 10, mini_y + 35))
+                    self.screen.blit(def_txt, (mini_x + 10, mini_y + 60))
+                    self.screen.blit(vit_txt, (mini_x + 10, mini_y + 85))
+                
 
         
         
@@ -534,6 +571,31 @@ class Game:
                 nom_txt = self.pokemon_name_font.render(nom, True, (255, 223, 100))
                 nom_rect = nom_txt.get_rect(center=(x + 75, y + 165))
                 self.screen.blit(nom_txt, nom_rect)
+
+
+                # Créer un rect pour détecter survol
+                rect_img = pygame.Rect(x, y, 150, 150)
+                
+                if rect_img.collidepoint(mouse_pos):
+                    # Mini-écran stats
+                    stats = self.liste_choix2[nom]  # [pv, attaque, défense, vitesse, image]
+                    pv, attaque, defense, vitesse = stats[0], stats[1], stats[2], stats[3]
+                    
+                    # Dessiner un rectangle mini-écran
+                    mini_x, mini_y = x + 160, y
+                    pygame.draw.rect(self.screen, (30,30,30), (mini_x, mini_y, 200, 120))
+                    pygame.draw.rect(self.screen, (255,255,255), (mini_x, mini_y, 200, 120), 2)  # bordure
+                    
+                    # Afficher stats
+                    pv_txt = self.stats_font.render(f"PV : {pv}", True, (255,255,255))
+                    atk_txt = self.stats_font.render(f"ATK : {attaque}", True, (255,255,255))
+                    def_txt = self.stats_font.render(f"DEF : {defense}", True, (255,255,255))
+                    vit_txt = self.stats_font.render(f"VIT : {vitesse}", True, (255,255,255))
+                    
+                    self.screen.blit(pv_txt, (mini_x + 10, mini_y + 10))
+                    self.screen.blit(atk_txt, (mini_x + 10, mini_y + 35))
+                    self.screen.blit(def_txt, (mini_x + 10, mini_y + 60))
+                    self.screen.blit(vit_txt, (mini_x + 10, mini_y + 85))
         
         
         
