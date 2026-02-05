@@ -91,6 +91,10 @@ class Game:
         self.perdent=""
 
 
+        self.pokemon_ko = False
+        self.timer_ko = 0
+
+
     def reset_game(self):
         # états
         self.state = "menu"
@@ -286,6 +290,57 @@ class Game:
             
     def update(self):
 
+        
+        if self.pokemon_ko:
+            if pygame.time.get_ticks() - self.timer_ko > 1000:
+               self.pokemon_ko = False
+
+               # PLAYER 1 KO
+               if self.pokemon_actuel1[0].pv_actuels == 0:
+                   if self.player1:
+                       self.son_retirer.play()
+                       self.pokemon_actuel1[0] = self.player1.pop(0)
+                       self.son_envoyer.play()
+                   else:
+                       self.gagnant = "Player2"
+                       self.perdent = "Player1"
+                       self.state = "victoire"
+
+               # PLAYER 2 KO
+
+               elif self.pokemon_actuel2[0].pv_actuels == 0:
+                    if self.player2:
+                        self.son_retirer.play()
+                        self.pokemon_actuel2[0] = self.player2.pop(0)
+                        self.son_envoyer.play()
+                    else:
+                        self.gagnant = "Player1"
+                        self.perdent = "Player2"
+                        self.state = "victoire"
+              
+              
+              
+              
+              
+              
+              
+              
+              
+
+        
+        
+    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         if len(self.choix) == 2:
             p1 = self.pokemon_actuel1[0]
             p2 = self.pokemon_actuel2[0]
@@ -317,6 +372,7 @@ class Game:
 
         # PLAYER 1 KO
         if self.pokemon_actuel1[0].pv_actuels <= 0:
+            self.pokemon_actuel1[0].pv_actuels = 0
             if self.player1:  # il reste des Pokémon
                 self.son_retirer.play()
                 pygame.time.delay(3000)
@@ -330,6 +386,7 @@ class Game:
 
         # PLAYER 2 KO
         if self.pokemon_actuel2[0].pv_actuels <= 0:
+            self.pokemon_actuel2[0].pv_actuels = 0
             if self.player2:  # il reste des Pokémon
                 self.son_retirer.play()
                 pygame.time.delay(3000)
@@ -365,7 +422,9 @@ class Game:
 
 
         
-        
+
+
+
 
 
 
@@ -419,17 +478,35 @@ class Game:
         player1 = self.button_font.render("Player1", True, (255, 223, 100))
         self.screen.blit(player1, (170, 80))
 
+
+        self.pokemon_name_font = pygame.font.SysFont("arial", 18, True)
+
         
         if self.player1:
-
-            positions1 = [(100,200), (300,200), (100,400), (300,400), (200,600)]  # 5 positions
+            positions1 = [(100,200), (300,200), (100,400), (300,400), (200,600)]
+        
             for i, nom in enumerate(self.liste_choix1):
-                pos = positions1[i]
+                x, y = positions1[i]
+        
+                # Image
                 img_path = self.liste_choix1[nom][4]
                 img = pygame.image.load(img_path).convert_alpha()
                 img = pygame.transform.scale(img, (150,150))
-                self.screen.blit(img, pos)
-            
+                self.screen.blit(img, (x, y))
+        
+                # Nom du Pokémon
+                nom_txt = self.pokemon_name_font.render(nom, True, (255, 223, 100))
+                nom_rect = nom_txt.get_rect(center=(x + 75, y + 165))
+                self.screen.blit(nom_txt, nom_rect)
+
+        
+        
+        
+        
+        
+        
+        
+        
             
             
             
@@ -442,13 +519,28 @@ class Game:
 
 
         if self.player2:
-            positions2 = [(700,200), (900,200), (700,400), (900,400), (800,600)]  # 5 positions
+            positions2 = [(700,200), (900,200), (700,400), (900,400), (800,600)]
+        
             for i, nom in enumerate(self.liste_choix2):
-                pos = positions2[i]
+                x, y = positions2[i]
+        
+                # Image
                 img_path = self.liste_choix2[nom][4]
                 img = pygame.image.load(img_path).convert_alpha()
                 img = pygame.transform.scale(img, (150,150))
-                self.screen.blit(img, pos)
+                self.screen.blit(img, (x, y))
+        
+                # Nom du Pokémon
+                nom_txt = self.pokemon_name_font.render(nom, True, (255, 223, 100))
+                nom_rect = nom_txt.get_rect(center=(x + 75, y + 165))
+                self.screen.blit(nom_txt, nom_rect)
+        
+        
+        
+        
+        
+        
+        
 
         
         
@@ -482,19 +574,75 @@ class Game:
         )     
 
 
-        Pokemon1_titre = pygame.font.SysFont("arial", 28, True).render(self.pokemon_actuel1[0].nom, True, (0, 0, 0))
+        Pokemon1_titre = pygame.font.SysFont("arial", 28, True).render(
+        self.pokemon_actuel1[0].nom, True, (0, 0, 0)
+        )
         self.screen.blit(
             Pokemon1_titre,
-            Pokemon1_titre.get_rect(topleft=player1_barre.topleft)
+            Pokemon1_titre.get_rect(topleft=(player1_barre.left + 10, player1_barre.top + 10))
         )
+        
+        Pokemon2_titre = pygame.font.SysFont("arial", 28, True).render(
+            self.pokemon_actuel2[0].nom, True, (0, 0, 0)
+        )
+        self.screen.blit(
+            Pokemon2_titre,
+            Pokemon2_titre.get_rect(topleft=(player2_barre.left + 10, player2_barre.top + 10))
+        )
+        
+
+
+        vie1 = pygame.font.SysFont("arial", 28, True).render(
+        f"{self.pokemon_actuel1[0].pv_actuels}/{self.pokemon_actuel1[0].pv_max}",
+        True,
+        (0, 0, 0)
+        )
+        self.screen.blit(
+            vie1,
+            vie1.get_rect(
+                bottomleft=(player1_barre.left + 10, player1_barre.bottom - 10)
+            )
+        )
+        
+        vie2 = pygame.font.SysFont("arial", 28, True).render(
+            f"{self.pokemon_actuel2[0].pv_actuels}/{self.pokemon_actuel2[0].pv_max}",
+            True,
+            (0, 0, 0)
+        )
+        self.screen.blit(
+            vie2,
+            vie2.get_rect(
+                bottomleft=(player2_barre.left + 10, player2_barre.bottom - 10)
+            )
+        )
+
+        
+        
+        
+        
+        
+        
+    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
    
 
-        Pokemon2_titre = pygame.font.SysFont("arial", 28, True).render(self.pokemon_actuel2[0].nom, True, (0, 0, 0))
-        self.screen.blit(
-            Pokemon2_titre,
-            Pokemon2_titre.get_rect(topleft=player2_barre.topleft)
-        )
+        
+        
+        
+        
+        
 
 
         pourcentage2=self.pokemon_actuel2[0].pv_actuels/self.pokemon_actuel2[0].pv_max
