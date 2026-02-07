@@ -344,106 +344,112 @@ class Game:
             
     def update(self):
 
-        # Début résolution
+        
+
+        # -----------------------------
+        # LANCEMENT DE LA RESOLUTION
+        # -----------------------------
         if len(self.choix) == 2 and not self.en_resolution:
             self.en_resolution = True
             self.timer_action = pygame.time.get_ticks()
             self.choix1 = self.choix[0]
             self.choix2 = self.choix[1]
-        
+    
             if self.choix1 == "attaque" and self.choix2 == "attaque":
                 self.son_attaque2.play()
-        
+    
             elif ("attaque" in [self.choix1, self.choix2]) and ("potion" in [self.choix1, self.choix2]):
                 self.son_attaque.play()
-        
+    
             elif self.choix1 == "potion" and self.choix2 == "potion":
                 self.son_potion.play()
-        
-        
-        # Résolution actions
+    
+        # -----------------------------
+        # EXECUTION DES ACTIONS
+        # -----------------------------
         if self.en_resolution and pygame.time.get_ticks() - self.timer_action >= self.dure:
-        
+    
             p1 = self.pokemon_actuel1[0]
             p2 = self.pokemon_actuel2[0]
-        
+    
+            # Player1
             if self.choix1 == "attaque" and p1.pv_actuels > 0:
                 p1.attaquer(p2)
-        
+    
             elif self.choix1 == "potion" and self.potion1 and p1.pv_actuels > 0:
                 self.potion1.pop(0).soigner(p1)
-        
+    
+            # Player2
             if self.choix2 == "attaque" and p2.pv_actuels > 0:
                 p2.attaquer(p1)
-        
+    
             elif self.choix2 == "potion" and self.potion2 and p2.pv_actuels > 0:
                 self.potion2.pop(0).soigner(p2)
-        
+    
             self.en_resolution = False
-        
-        
-            # Détection KO (séparée)
-            if not self.pokemon_ko and not self.en_resolution:
-                if self.pokemon_actuel1 and self.pokemon_actuel2:
-                    if self.pokemon_actuel1[0].pv_actuels <= 0 or self.pokemon_actuel2[0].pv_actuels <= 0:
-                        self.pokemon_ko = True
-                        self.son_retirer.play()
-
-            
-            
-            # Remplacement Pokémon
-            if self.pokemon_ko :
-            
+    
+            # Détection KO
+            if not self.pokemon_ko:
+                if (p1.pv_actuels <= 0) or (p2.pv_actuels <= 0):
+                    self.pokemon_ko = True
+                    self.timer_ko = pygame.time.get_ticks()
+                    self.son_retirer.play()
+    
+            # Reset tour
+            self.choix.clear()
+            self.choix1 = None
+            self.choix2 = None
+            self.tour_player1 = 1
+    
+        # -----------------------------
+        # REMPLACEMENT POKEMON APRES KO
+        # -----------------------------
+        if self.pokemon_ko:
+            if pygame.time.get_ticks() - self.timer_ko >= 2000:
+    
+                # PLAYER 1
                 if self.pokemon_actuel1 and self.pokemon_actuel1[0].pv_actuels <= 0:
                     if self.player1:
-                        pygame.time.delay(3000)
-                        self.pokemon_actuel1.pop(0)
-                        # Envoyer le prochain Pokémon
-                        self.pokemon_actuel1.append(self.player1.pop(0))
+                        self.pokemon_actuel1[0] = self.player1.pop(0)
                         self.son_envoyer.play()
                     else:
                         self.gagnant = "Player2"
                         self.perdent = "Player1"
                         self.state = "victoire"
-            
-                # Player 2
+    
+                # PLAYER 2
                 if self.pokemon_actuel2 and self.pokemon_actuel2[0].pv_actuels <= 0:
                     if self.player2:
-                        pygame.time.delay(3000)
-                        self.pokemon_actuel2.pop(0)
-                        # Envoyer le prochain Pokémon
-                        self.pokemon_actuel2.append(self.player2.pop(0))
+                        self.pokemon_actuel2[0] = self.player2.pop(0)
                         self.son_envoyer.play()
                     else:
                         self.gagnant = "Player1"
                         self.perdent = "Player2"
                         self.state = "victoire"
-            
-                # Reset KO
+    
                 self.pokemon_ko = False
-                
-                
-                
-                
-                
-                
-            
-                
-                
-                
-                
-                
-                
-                
-        
-                
-            self.choix.clear()
-            self.choix1 = None
-            self.choix2 = None
-            self.tour_player1 = 1
-            self.verifier_ko()
-        
+    
+        # -----------------------------
+        # MUSIQUE
+        # -----------------------------
         self.changer_musique(self.state)
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+        
+    
 
 
     def draw_menu(self):
@@ -622,6 +628,15 @@ class Game:
 
 
     def draw_combat(self):
+
+
+
+
+        p1 = self.pokemon_actuel1[0]
+        p2 = self.pokemon_actuel2[0]
+
+        pv1_affichage = max(0, p1.pv_actuels)
+        pv2_affichage = max(0, p2.pv_actuels)
         background = pygame.image.load("./image/fond_combat.png").convert()
         # Agrandir à la taille de la fenêtre (1200x800)
         background = pygame.transform.scale(background, (1200, 900))
@@ -632,7 +647,7 @@ class Game:
         player1_barre=pygame.draw.rect(self.screen, (255, 255, 255), (140, 240, 350, 120),border_radius=25 )
         player2_barre=pygame.draw.rect(self.screen, (255, 255, 255), (800, 610, 350, 120),border_radius=25 )
 
-        pourcentage1=self.pokemon_actuel1[0].pv_actuels/self.pokemon_actuel1[0].pv_max
+        pourcentage1=max(0, pv1_affichage)/p1.pv_max
         largeur_barre1 = int(310 * pourcentage1)
         pygame.draw.rect(
         self.screen,
@@ -661,7 +676,7 @@ class Game:
 
 
         vie1 = pygame.font.SysFont("arial", 28, True).render(
-        f"{self.pokemon_actuel1[0].pv_actuels}/{self.pokemon_actuel1[0].pv_max}",
+        f"{pv1_affichage}/{p1.pv_max}",
         True,
         (0, 0, 0)
         )
@@ -673,7 +688,7 @@ class Game:
         )
         
         vie2 = pygame.font.SysFont("arial", 28, True).render(
-            f"{self.pokemon_actuel2[0].pv_actuels}/{self.pokemon_actuel2[0].pv_max}",
+            f"{pv2_affichage}/{p2.pv_max}",
             True,
             (0, 0, 0)
         )
@@ -713,7 +728,7 @@ class Game:
         
 
 
-        pourcentage2=self.pokemon_actuel2[0].pv_actuels/self.pokemon_actuel2[0].pv_max
+        pourcentage2=max(0, pv2_affichage)/p2.pv_max
         largeur_barre2 = int(310 * pourcentage2)
         pygame.draw.rect(
         self.screen,
