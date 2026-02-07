@@ -61,9 +61,24 @@ class Game:
         
         self.son_retirer = pygame.mixer.Sound("./music/mort.mp3")
         self.son_envoyer = pygame.mixer.Sound("./music/nouveau.mp3")
+
+        self.son_bouton = pygame.mixer.Sound("./music/bouton.mp3")
+        self.son_bouton.set_volume(0.5)
+
+        self.son_attaque = pygame.mixer.Sound("./music/attaque.mp3")
+        self.son_attaque2 = pygame.mixer.Sound("./music/attaque2.mp3")
+        self.son_potion = pygame.mixer.Sound("./music/potion.mp3")
+        
+        self.son_attaque.set_volume(1.0)
+        self.son_attaque2.set_volume(1.0)
+        self.son_potion.set_volume(0.6)
         
         self.son_retirer.set_volume(0.6)
         self.son_envoyer.set_volume(0.6)
+
+        self.en_resolution = False
+        self.timer_action = 0
+        self.duree_action = 1000
 
 
         #pokemon
@@ -84,16 +99,19 @@ class Game:
         self.pokemon_actuel2=[]
 
         self.choix=[]
+        self.choix1 = None
+        self.choix2 = None
+
+        self.pokemon_ko = False
+        self.timer_ko = 0
 
 
         self.tour_player1 = 1
 
         self.gagnant=""
         self.perdent=""
+        self.dure = 1000
 
-
-        self.pokemon_ko = False
-        self.timer_ko = 0
 
 
     def reset_game(self):
@@ -117,8 +135,35 @@ class Game:
     
         # recharger tout
         self.charger_pokemon()
+
+
     
+    def verifier_ko(self):
+        # PLAYER 1
+        if self.pokemon_actuel1[0].pv_actuels <= 0:
+            if self.player1:
+                self.pokemon_ko = True
+                self.timer_ko = pygame.time.get_ticks()
+                self.son_retirer.play()
+            else:
+                self.gagnant = "Player2"
+                self.perdent = "Player1"
+                self.state = "victoire"
     
+        # PLAYER 2
+        if self.pokemon_actuel2[0].pv_actuels <= 0:
+            if self.player2:
+                self.pokemon_ko = True
+                self.timer_ko = pygame.time.get_ticks()
+                self.son_retirer.play()
+            else:
+                self.gagnant = "Player1"
+                self.perdent = "Player2"
+                self.state = "victoire"
+
+
+
+
     
     def changer_musique(self, state):
         # menu et preparation = même musique
@@ -239,16 +284,19 @@ class Game:
             if self.state == "menu":
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.button_rect.collidepoint(event.pos):
+                        self.son_bouton.play()
                         self.state = "preparation"
 
             if self.state == "preparation":
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.button_rect2.collidepoint(event.pos):
+                        self.son_bouton.play()
                         self.state = "combat"
 
             if self.gagnant!="":
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.button_rect2.collidepoint(event.pos):
+                        self.son_bouton.play()
                         self.state = "victoire"
 
             if self.state == "combat" and event.type == pygame.MOUSEBUTTONDOWN:
@@ -256,20 +304,24 @@ class Game:
                 # PLAYER 1
                 if self.tour_player1 == 1:
                     if self.button_attaque.collidepoint(event.pos):
+                        self.son_bouton.play()
                         self.choix.append( "attaque")
                         self.tour_player1 = 2
             
                     elif self.button_potion.collidepoint(event.pos):
+                        self.son_bouton.play()
                         self.choix.append( "potion")
                         self.tour_player1 = 2
             
                 # PLAYER 2
                 elif self.tour_player1 == 2:
                     if self.button_attaque2.collidepoint(event.pos):
+                        self.son_bouton.play()
                         self.choix.append("attaque")
                         self.tour_player1 = 3
             
                     elif self.button_potion2.collidepoint(event.pos):
+                        self.son_bouton.play()
                         self.choix.append(("potion"))
                         self.tour_player1 = 3
 
@@ -278,6 +330,7 @@ class Game:
             if self.state == "victoire":
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         if self.button_rect3.collidepoint(event.pos):
+                            self.son_bouton.play()
                             self.reset_game()
    
             
@@ -291,156 +344,108 @@ class Game:
             
     def update(self):
 
+        # Début résolution
+        if len(self.choix) == 2 and not self.en_resolution:
+            self.en_resolution = True
+            self.timer_action = pygame.time.get_ticks()
+            self.choix1 = self.choix[0]
+            self.choix2 = self.choix[1]
         
-        if self.pokemon_ko:
-            if pygame.time.get_ticks() - self.timer_ko > 1000:
-               self.pokemon_ko = False
-
-               # PLAYER 1 KO
-               if self.pokemon_actuel1[0].pv_actuels == 0:
-                   if self.player1:
-                       self.son_retirer.play()
-                       self.pokemon_actuel1[0] = self.player1.pop(0)
-                       self.son_envoyer.play()
-                   else:
-                       self.gagnant = "Player2"
-                       self.perdent = "Player1"
-                       self.state = "victoire"
-
-               # PLAYER 2 KO
-
-               elif self.pokemon_actuel2[0].pv_actuels == 0:
-                    if self.player2:
+            if self.choix1 == "attaque" and self.choix2 == "attaque":
+                self.son_attaque2.play()
+        
+            elif ("attaque" in [self.choix1, self.choix2]) and ("potion" in [self.choix1, self.choix2]):
+                self.son_attaque.play()
+        
+            elif self.choix1 == "potion" and self.choix2 == "potion":
+                self.son_potion.play()
+        
+        
+        # Résolution actions
+        if self.en_resolution and pygame.time.get_ticks() - self.timer_action >= self.dure:
+        
+            p1 = self.pokemon_actuel1[0]
+            p2 = self.pokemon_actuel2[0]
+        
+            if self.choix1 == "attaque" and p1.pv_actuels > 0:
+                p1.attaquer(p2)
+        
+            elif self.choix1 == "potion" and self.potion1 and p1.pv_actuels > 0:
+                self.potion1.pop(0).soigner(p1)
+        
+            if self.choix2 == "attaque" and p2.pv_actuels > 0:
+                p2.attaquer(p1)
+        
+            elif self.choix2 == "potion" and self.potion2 and p2.pv_actuels > 0:
+                self.potion2.pop(0).soigner(p2)
+        
+            self.en_resolution = False
+        
+        
+            # Détection KO (séparée)
+            if not self.pokemon_ko and not self.en_resolution:
+                if self.pokemon_actuel1 and self.pokemon_actuel2:
+                    if self.pokemon_actuel1[0].pv_actuels <= 0 or self.pokemon_actuel2[0].pv_actuels <= 0:
+                        self.pokemon_ko = True
                         self.son_retirer.play()
-                        self.pokemon_actuel2[0] = self.player2.pop(0)
+
+            
+            
+            # Remplacement Pokémon
+            if self.pokemon_ko :
+            
+                if self.pokemon_actuel1 and self.pokemon_actuel1[0].pv_actuels <= 0:
+                    if self.player1:
+                        pygame.time.delay(3000)
+                        self.pokemon_actuel1.pop(0)
+                        # Envoyer le prochain Pokémon
+                        self.pokemon_actuel1.append(self.player1.pop(0))
+                        self.son_envoyer.play()
+                    else:
+                        self.gagnant = "Player2"
+                        self.perdent = "Player1"
+                        self.state = "victoire"
+            
+                # Player 2
+                if self.pokemon_actuel2 and self.pokemon_actuel2[0].pv_actuels <= 0:
+                    if self.player2:
+                        pygame.time.delay(3000)
+                        self.pokemon_actuel2.pop(0)
+                        # Envoyer le prochain Pokémon
+                        self.pokemon_actuel2.append(self.player2.pop(0))
                         self.son_envoyer.play()
                     else:
                         self.gagnant = "Player1"
                         self.perdent = "Player2"
                         self.state = "victoire"
-              
-              
-              
-              
-              
-              
-              
-              
-              
-
+            
+                # Reset KO
+                self.pokemon_ko = False
+                
+                
+                
+                
+                
+                
+            
+                
+                
+                
+                
+                
+                
+                
         
-        
-    
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        if len(self.choix) == 2:
-            p1 = self.pokemon_actuel1[0]
-            p2 = self.pokemon_actuel2[0]
-        
-            # ----- ACTION PLAYER 1 -----
-            if self.choix[0] == "attaque":
-                if p1.pv_actuels > 0:
-                    p1.attaquer(p2)
-        
-            elif self.choix[0] == "potion":
-                if self.potion1 and p1.pv_actuels > 0:
-                    self.potion1[0].soigner(p1)
-                    self.potion1.pop(0)
-        
-            # ----- ACTION PLAYER 2 -----
-            if self.choix[1] == "attaque":
-                if p2.pv_actuels > 0:
-                    p2.attaquer(p1)
-        
-            elif self.choix[1] == "potion":
-                if self.potion2 and p2.pv_actuels > 0:
-                    self.potion2[0].soigner(p2)
-                    self.potion2.pop(0)
-        
-            # ----- FIN DU TOUR -----
+                
             self.choix.clear()
+            self.choix1 = None
+            self.choix2 = None
             self.tour_player1 = 1
-
-
-        # PLAYER 1 KO
-        if self.pokemon_actuel1[0].pv_actuels <= 0:
-            self.pokemon_actuel1[0].pv_actuels = 0
-            if self.player1:  # il reste des Pokémon
-                self.son_retirer.play()
-                pygame.time.delay(3000)
-                self.son_envoyer.play()
-                pygame.time.delay(1000)
-                self.pokemon_actuel1[0] = self.player1.pop(0)
-            else:  # plus de Pokémon → Player2 gagne
-                self.gagnant = "Player2"
-                self.perdent= "Player1"
-                self.state = "victoire"
-
-        # PLAYER 2 KO
-        if self.pokemon_actuel2[0].pv_actuels <= 0:
-            self.pokemon_actuel2[0].pv_actuels = 0
-            if self.player2:  # il reste des Pokémon
-                self.son_retirer.play()
-                pygame.time.delay(3000)
-                self.son_envoyer.play()
-                pygame.time.delay(1000)
-                self.pokemon_actuel2[0] = self.player2.pop(0)
-            else:  # plus de Pokémon → Player1 gagne
-                self.gagnant = "Player1"
-                self.perdent= "Player2"
-                self.state = "victoire"
-
-
-        
-        
-        
-        
-
-        
-
-        
-        
-
-        
-        
-        
-        
-
-        
-
-        
+            self.verifier_ko()
         
         self.changer_musique(self.state)
 
 
-        
-
-
-
-
-
-
-            
-
-        
-                
-
-        
-        
-    
-        
-        
-        
-        
     def draw_menu(self):
         
         background = pygame.image.load("./image/menu.png").convert()
