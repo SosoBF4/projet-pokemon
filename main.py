@@ -11,109 +11,106 @@ pygame.init()
 
 class Game:
     def __init__(self):
+
+        # boucle principale
         self.run = True
         self.clock = pygame.time.Clock()
 
-        # Fenêtre
+        # Création de la fenêtre principale
         self.screen = pygame.display.set_mode((1200, 800))
         pygame.display.set_caption("Pokemon")
+
+        # icône du jeu
         icon = pygame.image.load("image/logo.png").convert_alpha()
         pygame.display.set_icon(icon)
 
-        # État du jeu
-        self.state = "menu"  # menu ou game
-        # Polices
+        # Machine à états pour savoir où on est dans le jeu
+        self.state = "menu"
+
+        # Polices utilisées pour les textes
         self.title_font = pygame.font.SysFont("arial", 120, bold=True)
         self.button_font = pygame.font.SysFont("arial", 40)
 
-
-        # Bouton
+        # Définition des zones cliquables (boutons)
         self.button_rect = pygame.Rect(300, 430, 600, 110)
-
         self.button_rect2= pygame.Rect(450, 350, 250, 70)
-
         self.button_rect3 = pygame.Rect(400, 100, 400, 110)
 
+        # boutons combat
         self.button_attaque = pygame.Rect(50, 100, 200, 60)
-
         self.button_attaque2 = pygame.Rect(600, 100, 200, 60)
-
         self.button_potion= pygame.Rect(320, 100, 200, 60)
-        
-        
         self.button_potion2= pygame.Rect(870, 100, 200, 60)
 
-
-
-        pygame.mixer.init()     #Music
+        # Initialisation du son
+        pygame.mixer.init()
         pygame.mixer.music.set_volume(0.4)
 
+        # musique actuelle
         self.musique_actuelle = None
-        
-        
-        
-        self.musiques = {                     
-                    "menu": "./music/Introduction.mp3",
-                    "preparation": "./music/Introduction.mp3",
-                    "combat": "./music/Combat.mp3",
-                    "victoire":"./music/Victoire.mp3"
-                }
-        
+
+        # dictionnaire musique selon état
+        self.musiques = {
+            "menu": "./music/Introduction.mp3",
+            "preparation": "./music/Introduction.mp3",
+            "combat": "./music/Combat.mp3",
+            "victoire":"./music/Victoire.mp3"
+        }
+
+        # effets sonores
         self.son_retirer = pygame.mixer.Sound("./music/mort.mp3")
         self.son_envoyer = pygame.mixer.Sound("./music/nouveau.mp3")
-
         self.son_bouton = pygame.mixer.Sound("./music/bouton.mp3")
-        self.son_bouton.set_volume(0.5)
-
         self.son_attaque = pygame.mixer.Sound("./music/attaque.mp3")
         self.son_attaque2 = pygame.mixer.Sound("./music/attaque2.mp3")
         self.son_potion = pygame.mixer.Sound("./music/potion.mp3")
-        
-        self.son_attaque.set_volume(1.0)
-        self.son_attaque2.set_volume(1.0)
-        self.son_potion.set_volume(0.6)
-        
-        self.son_retirer.set_volume(0.6)
-        self.son_envoyer.set_volume(0.6)
 
+        # volumes
+        self.son_bouton.set_volume(0.5)
+        self.son_potion.set_volume(0.6)
+
+        # gestion timing actions
         self.en_resolution = False
         self.timer_action = 0
         self.duree_action = 1000
 
+        # image potion
+        self.img_potion = pygame.image.load("./image/potion.png").convert_alpha()
+        self.img_potion = pygame.transform.scale(self.img_potion, (40,40))
 
-        #pokemon
+        # structures de données du jeu
         self.pokemon={}
-
-        #liste pokemon joeur
-
         self.player1=[]
         self.player2=[]
-
         self.potion1=[]
         self.potion2=[]
-
         self.liste_choix1={}
         self.liste_choix2={}
-
         self.pokemon_actuel1=[]
         self.pokemon_actuel2=[]
-
         self.choix=[]
         self.choix1 = None
         self.choix2 = None
 
+        # gestion KO
         self.pokemon_ko = False
         self.timer_ko = 0
 
-
+        # tour joueur
         self.tour_player1 = 1
 
+        # gagnant
         self.gagnant=""
         self.perdent=""
         self.dure = 1000
 
 
 
+
+
+
+
+    # recharge complètement une partie
     def reset_game(self):
         # états
         self.state = "menu"
@@ -137,36 +134,11 @@ class Game:
         self.charger_pokemon()
 
 
-    
-    def verifier_ko(self):
-        # PLAYER 1
-        if self.pokemon_actuel1[0].pv_actuels <= 0:
-            if self.player1:
-                self.pokemon_ko = True
-                self.timer_ko = pygame.time.get_ticks()
-                self.son_retirer.play()
-            else:
-                self.gagnant = "Player2"
-                self.perdent = "Player1"
-                self.state = "victoire"
-    
-        # PLAYER 2
-        if self.pokemon_actuel2[0].pv_actuels <= 0:
-            if self.player2:
-                self.pokemon_ko = True
-                self.timer_ko = pygame.time.get_ticks()
-                self.son_retirer.play()
-            else:
-                self.gagnant = "Player1"
-                self.perdent = "Player2"
-                self.state = "victoire"
 
 
-
-
-    
+    # change la musique selon l'état
     def changer_musique(self, state):
-        # menu et preparation = même musique
+        
 
         
         if state in ("menu", "preparation"):
@@ -180,26 +152,24 @@ class Game:
             pygame.mixer.music.play(-1)
             self.musique_actuelle = musique_voulue
     
-
+    # charge les pokemons depuis sqlite
     def charger_pokemon(self):
+        # connexion base de données
         conn = sqlite3.connect("./sql/pokemon.db")
         cur = conn.cursor()
-
+        # requête SQL
         cur.execute("""
             SELECT nom, pv_max, attaque, defense, vitesse, image, id_type
             FROM pokemon
         """)
-
+        # création dictionnaire pokemons
         for row in cur.fetchall():
             nom = row[0]
             self.pokemon[nom] = list(row[1:])
 
         conn.close()
 
-
         #choix des pokemon
-
-
         cles = random.sample(list(self.pokemon.keys()), 5)
         for cle in cles:
             self.liste_choix1[cle] = self.pokemon[cle]
@@ -207,7 +177,7 @@ class Game:
         cles = random.sample(list(self.pokemon.keys()), 5)
         for cle in cles:
             self.liste_choix2[cle] = self.pokemon[cle]
-        
+        # création objets pokemon
         for nom in self.liste_choix1:
             stats = self.liste_choix1[nom]
             self.player1.append(
@@ -235,14 +205,14 @@ class Game:
                     stats[5]
                 )
             )
-
+        # pokemon actifs
         self.pokemon_actuel1.append(self.player1[0])
         self.player1.pop(0)
         self.pokemon_actuel2.append(self.player2[0])
         self.player2.pop(0)
 
         
-
+        # chargement potion
         conn = sqlite3.connect("./sql/pokemon.db")
         cur = conn.cursor()
         
@@ -251,18 +221,18 @@ class Game:
             FROM potion
         """)
         
-        row = cur.fetchone()  # ✅ première ligne uniquement
+        row = cur.fetchone()  
 
-        nom = row[0]     # ✅ variable nom
-        soin = row[1]    # ✅ variable soin 
+        nom = row[0]     
+        soin = row[1]    
     
         conn.close()
-
-        for i in range(2):
+        # chaque joueur a 4 potions
+        for i in range(4):
 
             self.potion1.append(Potion(nom,soin))
 
-        for i in range(2):
+        for i in range(4):
             self.potion2.append(Potion(nom,soin))
 
 
@@ -275,7 +245,7 @@ class Game:
 
     
 
-    
+    # gestion des événements souris / fermeture
     def event(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -341,14 +311,13 @@ class Game:
             
             
             
-            
+    # logique du jeu       
     def update(self):
 
         
 
-        # -----------------------------
+        
         # LANCEMENT DE LA RESOLUTION
-        # -----------------------------
         if len(self.choix) == 2 and not self.en_resolution:
             self.en_resolution = True
             self.timer_action = pygame.time.get_ticks()
@@ -360,13 +329,14 @@ class Game:
     
             elif ("attaque" in [self.choix1, self.choix2]) and ("potion" in [self.choix1, self.choix2]):
                 self.son_attaque.play()
+                pygame.time.delay(1000)
+                self.son_potion.play()
     
             elif self.choix1 == "potion" and self.choix2 == "potion":
                 self.son_potion.play()
     
-        # -----------------------------
+        
         # EXECUTION DES ACTIONS
-        # -----------------------------
         if self.en_resolution and pygame.time.get_ticks() - self.timer_action >= self.dure:
     
             p1 = self.pokemon_actuel1[0]
@@ -401,9 +371,8 @@ class Game:
             self.choix2 = None
             self.tour_player1 = 1
     
-        # -----------------------------
+        
         # REMPLACEMENT POKEMON APRES KO
-        # -----------------------------
         if self.pokemon_ko:
             if pygame.time.get_ticks() - self.timer_ko >= 2000:
     
@@ -429,9 +398,7 @@ class Game:
     
                 self.pokemon_ko = False
     
-        # -----------------------------
         # MUSIQUE
-        # -----------------------------
         self.changer_musique(self.state)
 
 
@@ -651,7 +618,7 @@ class Game:
         largeur_barre1 = int(310 * pourcentage1)
         pygame.draw.rect(
         self.screen,
-        (0, 200, 0),                 # vert
+        (0, 200, 0),                
         (160, 290, largeur_barre1, 15),
         border_radius=8
         )     
@@ -732,7 +699,7 @@ class Game:
         largeur_barre2 = int(310 * pourcentage2)
         pygame.draw.rect(
         self.screen,
-        (0, 200, 0),                 # vert
+        (0, 200, 0),            
         (820, 660, largeur_barre2, 15),
         border_radius=8
 
@@ -740,12 +707,12 @@ class Game:
 
 
         pokemon1 = pygame.image.load(str(self.pokemon_actuel1[0].image_path)).convert_alpha()
-        pokemon1 = pygame.transform.scale(pokemon1, (300, 300))  # ← taille ici
+        pokemon1 = pygame.transform.scale(pokemon1, (300, 300))  
         self.screen.blit(pokemon1, (140, 440))
 
 
         pokemon2 = pygame.image.load(str(self.pokemon_actuel2[0].image_path)).convert_alpha()
-        pokemon2 = pygame.transform.scale(pokemon2, (300, 350))  # ← taille ici
+        pokemon2 = pygame.transform.scale(pokemon2, (300, 350)) 
         self.screen.blit(pokemon2, (800, 240))
 
         #Commande 
@@ -767,6 +734,10 @@ class Game:
                 text_surface = self.button_font.render("Soigner", True, (255, 255, 255))
                 text_potion = text_surface.get_rect(center=self.button_potion.center)
                 self.screen.blit(text_surface, text_potion)
+                txt_x2 = self.button_font.render(f"x{len(self.potion1)}", True, (255,255,255))
+                pos_txt = (530,110)
+                self.screen.blit(txt_x2, pos_txt)
+                self.screen.blit(self.img_potion, (pos_txt[0] + 60, pos_txt[1]-5))
 
         if self.tour_player1 ==2:
 
@@ -786,6 +757,11 @@ class Game:
                 text_surface = self.button_font.render("Soigner", True, (255, 255, 255))
                 text_potion = text_surface.get_rect(center=self.button_potion2.center)
                 self.screen.blit(text_surface, text_potion)
+                txt_x2 = self.button_font.render(f"x{len(self.potion1)}", True, (255,255,255))
+                pos_txt = (1090,110)
+                self.screen.blit(txt_x2, pos_txt)
+                self.screen.blit(self.img_potion, (pos_txt[0] + 60, pos_txt[1]-5))
+
 
     
     def draw_victoire(self):
@@ -834,7 +810,7 @@ class Game:
     
 
     
-    
+    # affichage
     def display(self):
 
         
@@ -852,7 +828,7 @@ class Game:
 
 
         pygame.display.flip()
-
+    # boucle principale
     def Run(self):
         self.charger_pokemon()
         while self.run:
@@ -862,7 +838,7 @@ class Game:
             self.clock.tick(60)
 
 
-# ------------------- Lancer le jeu -------------------
+#Lancer le jeu
 Jeu = Game()
 Jeu.Run()
 
